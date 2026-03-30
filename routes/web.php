@@ -23,7 +23,7 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     $user = auth()->user();
 
-    if ($user && $user->role === 'admin') {
+    if ($user && $user->isAdmin()) {
         return redirect()->route('admin.home');
     }
 
@@ -38,9 +38,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     /**
      * Área do colaborador /app
      */
-    Route::get('/app', function () {
-        return view('app.home');
-    })->name('app.home');
+    Route::prefix('app')
+        ->name('app.')
+        ->group(function () {
+            Route::get('/', [ServicoController::class, 'index'])->name('home');
+            Route::get('/servicos', [ServicoController::class, 'index'])->name('servicos.index');
+            Route::get('/servicos/{servico}', [ServicoController::class, 'show'])->name('servicos.show');
+            Route::get('/servicos/{servico}/pdf', [ServicoController::class, 'pdf'])->name('servicos.pdf');
+            Route::patch('/servicos/{servico}/status', [ServicoController::class, 'updateStatus'])
+                ->name('servicos.status');
+            Route::get('/servicos/{servico}/materiais', [ServicoMaterialController::class, 'create'])
+                ->name('servicos.materiais.create');
+            Route::post('/servicos/{servico}/materiais', [ServicoMaterialController::class, 'store'])
+                ->name('servicos.materiais.store');
+        });
 
     /**
      * Área ADMIN (prefixo /admin)

@@ -15,9 +15,32 @@ use Illuminate\Support\Facades\File;
 
 class ServicoController extends Controller
 {
+    private function routeBase(): string
+    {
+        return auth()->user()?->isAdmin() ? 'admin.servicos' : 'app.servicos';
+    }
+
+    private function ensureCanAccess(Servico $servico): void
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            abort(401);
+        }
+
+        if ($user->isAdmin()) {
+            return;
+        }
+
+        if ((int) $servico->colaborador_id !== (int) $user->id) {
+            abort(403, 'Acesso negado.');
+        }
+    }
+
     public function index(Request $request)
     {
         $query = Servico::with(['cliente', 'colaborador'])->latest();
+        $user = auth()->user();
 
         // filtro por status
         if ($request->filled('status')) {
@@ -25,8 +48,12 @@ class ServicoController extends Controller
         }
 
         // filtro por colaborador
-        if ($request->filled('colaborador_id')) {
+        if ($request->filled('colaborador_id') && $user?->isAdmin()) {
             $query->where('colaborador_id', $request->colaborador_id);
+        }
+
+        if (!$user?->isAdmin()) {
+            $query->where('colaborador_id', $user->id);
         }
 
         // filtro por data (de/até)
@@ -50,12 +77,14 @@ class ServicoController extends Controller
             'cancelado' => 'Cancelado',
         ];
 
-        return view('admin.servicos.index', compact('servicos', 'colaboradores', 'statusList'));
+        $routeBase = $this->routeBase();
+
+        return view('admin.servicos.index', compact('servicos', 'colaboradores', 'statusList', 'routeBase'));
     }
 
     public function create()
     {
-        if (auth()->user()?->role !== 'admin') {
+        if (!auth()->user()?->isAdmin()) {
             abort(403);
         }
 
@@ -67,7 +96,7 @@ class ServicoController extends Controller
 
     public function store(Request $request)
     {
-        if (auth()->user()?->role !== 'admin') {
+        if (!auth()->user()?->isAdmin()) {
             abort(403);
         }
 
@@ -108,12 +137,17 @@ class ServicoController extends Controller
 
     public function show(Servico $servico)
     {
+        $this->ensureCanAccess($servico);
         $servico->load(['cliente', 'colaborador', 'materiais']);
-        return view('admin.servicos.show', compact('servico'));
+        $routeBase = $this->routeBase();
+
+        return view('admin.servicos.show', compact('servico', 'routeBase'));
     }
 
     public function updateStatus(Request $request, Servico $servico)
     {
+        $this->ensureCanAccess($servico);
+
         $novoStatus = $request->validate([
             'status' => ['required', 'in:aberto,em_execucao,finalizado'],
         ])['status'];
@@ -250,7 +284,7 @@ class ServicoController extends Controller
 
     public function destroy(Servico $servico)
     {
-        if (auth()->user()?->role !== 'admin') {
+        if (!auth()->user()?->isAdmin()) {
             abort(403);
         }
 
@@ -261,27 +295,29 @@ class ServicoController extends Controller
     }
 
     public function pdf(Servico $servico)
-{
-    // Garante cliente carregado (se tiver relacionamento)
-    $servico->load(['cliente']);
+    {
+        $this->ensureCanAccess($servico);
 
-    // Caminho da logo (a mesma do sidebar)
-    $logoPath = public_path('img/jf-logo.jpeg');
+        // Garante cliente carregado (se tiver relacionamento)
+        $servico->load(['cliente']);
 
-    // Converte imagem para base64 (DomPDF fica 100% confiável assim)
-    $logoBase64 = null;
-    if (File::exists($logoPath)) {
-        $type = pathinfo($logoPath, PATHINFO_EXTENSION);
-        $data = file_get_contents($logoPath);
-        $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        // Caminho da logo (a mesma do sidebar)
+        $logoPath = public_path('img/jf-logo.jpeg');
+
+        // Converte imagem para base64 (DomPDF fica 100% confiável assim)
+        $logoBase64 = null;
+        if (File::exists($logoPath)) {
+            $type = pathinfo($logoPath, PATHINFO_EXTENSION);
+            $data = file_get_contents($logoPath);
+            $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        }
+
+        $pdf = Pdf::loadView('admin.servicos.pdf', [
+            'servico' => $servico,
+            'logoBase64' => $logoBase64,
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('servico-'.$servico->id.'.pdf');
     }
-
-    $pdf = Pdf::loadView('admin.servicos.pdf', [
-        'servico' => $servico,
-        'logoBase64' => $logoBase64,
-    ])->setPaper('a4', 'portrait');
-
-    return $pdf->download('servico-'.$servico->id.'.pdf');
-}
 
 }

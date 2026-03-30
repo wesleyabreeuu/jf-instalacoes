@@ -14,7 +14,12 @@ class RoleMiddleware
 
         if (!$user) abort(401);
 
-        if (!in_array($user->role, $roles, true)) {
+        $allowedRoles = array_map(
+            static fn (string $role): string => strtolower(trim($role)),
+            $roles
+        );
+
+        if (!in_array($user->role_normalized, $allowedRoles, true)) {
             abort(403, 'Acesso negado.');
         }
 

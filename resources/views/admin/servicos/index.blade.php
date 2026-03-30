@@ -10,6 +10,8 @@
 @endif
 
 @php
+    $routeBase = $routeBase ?? 'admin.servicos';
+    $isAdmin = auth()->user()?->isAdmin();
     $statusColors = [
         'agendado' => 'info',
         'aberto' => 'secondary',
@@ -22,7 +24,7 @@
 {{-- ✅ FILTROS --}}
 <div class="card">
     <div class="card-body">
-        <form method="GET" action="{{ route('admin.servicos.index') }}">
+        <form method="GET" action="{{ route($routeBase.'.index') }}">
             <div class="row">
 
                 <div class="col-md-3">
@@ -37,17 +39,19 @@
                     </select>
                 </div>
 
-                <div class="col-md-3">
-                    <label>Colaborador</label>
-                    <select name="colaborador_id" class="form-control">
-                        <option value="">Todos</option>
-                        @foreach($colaboradores as $c)
-                            <option value="{{ $c->id }}" @selected((string)request('colaborador_id') === (string)$c->id)>
-                                {{ $c->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+                @if($isAdmin)
+                    <div class="col-md-3">
+                        <label>Colaborador</label>
+                        <select name="colaborador_id" class="form-control">
+                            <option value="">Todos</option>
+                            @foreach($colaboradores as $c)
+                                <option value="{{ $c->id }}" @selected((string)request('colaborador_id') === (string)$c->id)>
+                                    {{ $c->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
 
                 <div class="col-md-3">
                     <label>Data (de)</label>
@@ -66,13 +70,13 @@
                     <i class="fas fa-filter"></i> Filtrar
                 </button>
 
-                <a href="{{ route('admin.servicos.index') }}" class="btn btn-outline-secondary">
+                <a href="{{ route($routeBase.'.index') }}" class="btn btn-outline-secondary">
                     Limpar
                 </a>
 
                 {{-- ✅ Novo Serviço só para admin --}}
-                @if(auth()->user()?->role === 'admin')
-                    <a href="{{ route('admin.servicos.create') }}" class="btn btn-primary ml-auto">
+                @if($isAdmin)
+                    <a href="{{ route($routeBase.'.create') }}" class="btn btn-primary ml-auto">
                         <i class="fas fa-plus"></i> Novo Serviço
                     </a>
                 @endif
@@ -115,20 +119,20 @@
                         </td>
 
                         <td class="text-center" style="white-space: nowrap;">
-                            <a href="{{ route('admin.servicos.show', $servico) }}" class="btn btn-sm btn-primary">
+                            <a href="{{ route($routeBase.'.show', $servico) }}" class="btn btn-sm btn-primary">
                                 <i class="fas fa-eye"></i> Ver
                             </a>
 
                             {{-- ✅ PDF --}}
-                            <a href="{{ route('admin.servicos.pdf', $servico) }}"
+                            <a href="{{ route($routeBase.'.pdf', $servico) }}"
                                class="btn btn-sm btn-danger"
                                title="Gerar PDF">
                                 <i class="fas fa-file-pdf"></i>
                             </a>
 
                             {{-- ✅ Excluir só para admin --}}
-                            @if(auth()->user()?->role === 'admin')
-                                <form action="{{ route('admin.servicos.destroy', $servico) }}"
+                            @if($isAdmin)
+                                <form action="{{ route($routeBase.'.destroy', $servico) }}"
                                       method="POST"
                                       class="d-inline"
                                       onsubmit="return confirm('Deseja realmente excluir este serviço?')">

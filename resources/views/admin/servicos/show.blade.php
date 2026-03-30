@@ -10,6 +10,7 @@
 @endif
 
 @php
+    $routeBase = $routeBase ?? 'admin.servicos';
     $statusColors = [
         'agendado' => 'info',
         'aberto' => 'secondary',
@@ -142,7 +143,7 @@
         <div class="d-flex mt-3" style="gap: 10px; flex-wrap: wrap;">
 
             @if($servico->status === 'agendado')
-                <form method="POST" action="{{ route('admin.servicos.status', $servico) }}">
+                <form method="POST" action="{{ route($routeBase.'.status', $servico) }}">
                     @csrf
                     @method('PATCH')
                     <input type="hidden" name="status" value="aberto">
@@ -153,7 +154,7 @@
             @endif
 
             @if($servico->status === 'aberto')
-                <form method="POST" action="{{ route('admin.servicos.status', $servico) }}">
+                <form method="POST" action="{{ route($routeBase.'.status', $servico) }}">
                     @csrf
                     @method('PATCH')
                     <input type="hidden" name="status" value="em_execucao">
@@ -164,11 +165,11 @@
             @endif
 
             @if($servico->status === 'em_execucao')
-                <a href="{{ route('admin.servicos.materiais.create', $servico) }}" class="btn btn-primary">
+                <a href="{{ route($routeBase.'.materiais.create', $servico) }}" class="btn btn-primary">
                     <i class="fas fa-boxes"></i> Lançar / Editar materiais
                 </a>
 
-                <form method="POST" action="{{ route('admin.servicos.status', $servico) }}">
+                <form method="POST" action="{{ route($routeBase.'.status', $servico) }}">
                     @csrf
                     @method('PATCH')
                     <input type="hidden" name="status" value="finalizado">
@@ -178,7 +179,7 @@
                 </form>
             @endif
 
-            <a href="{{ route('admin.servicos.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ route($routeBase.'.index') }}" class="btn btn-outline-secondary">
                 Voltar
             </a>
         </div>

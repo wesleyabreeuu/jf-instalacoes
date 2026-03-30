@@ -46,4 +46,19 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function getRoleNormalizedAttribute(): string
+    {
+        return strtolower(trim((string) $this->role));
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role_normalized === 'admin';
+    }
+
+    public function isColaborador(): bool
+    {
+        return $this->role_normalized === 'colaborador';
+    }
 }

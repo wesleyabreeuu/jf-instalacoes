@@ -35,7 +35,7 @@
                         <td>{{ $u->name }}</td>
                         <td>{{ $u->email }}</td>
                         <td>
-                            <span class="badge badge-{{ $u->role === 'admin' ? 'danger' : 'info' }}">
+                            <span class="badge badge-{{ $u->isAdmin() ? 'danger' : 'info' }}">
                                 {{ $u->role }}
                             </span>
                         </td>

@@ -9,12 +9,37 @@ use Illuminate\Http\Request;
 
 class ServicoMaterialController extends Controller
 {
+    private function routeBase(): string
+    {
+        return auth()->user()?->isAdmin() ? 'admin.servicos' : 'app.servicos';
+    }
+
+    private function ensureCanAccess(Servico $servico): void
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            abort(401);
+        }
+
+        if ($user->isAdmin()) {
+            return;
+        }
+
+        if ((int) $servico->colaborador_id !== (int) $user->id) {
+            abort(403, 'Acesso negado.');
+        }
+    }
+
     public function create(Servico $servico)
     {
+        $this->ensureCanAccess($servico);
+        $routeBase = $this->routeBase();
+
         // Só permite lançar materiais quando estiver em execução
         if ($servico->status !== 'em_execucao') {
             return redirect()
-                ->route('admin.servicos.show', $servico->id)
+                ->route("{$routeBase}.show", $servico->id)
                 ->with('success', 'O serviço precisa estar EM EXECUÇÃO para lançar materiais.');
         }
 
@@ -25,15 +50,18 @@ class ServicoMaterialController extends Controller
 
         $lancados = $servico->materiais()->get();
 
-        return view('admin.materiais.usar_no_servico', compact('servico', 'materiais', 'lancados'));
+        return view('admin.materiais.usar_no_servico', compact('servico', 'materiais', 'lancados', 'routeBase'));
     }
 
     public function store(Request $request, Servico $servico)
     {
+        $this->ensureCanAccess($servico);
+        $routeBase = $this->routeBase();
+
         // Só permite salvar quando estiver em execução
         if ($servico->status !== 'em_execucao') {
             return redirect()
-                ->route('admin.servicos.show', $servico->id)
+                ->route("{$routeBase}.show", $servico->id)
                 ->with('success', 'O serviço precisa estar EM EXECUÇÃO para salvar materiais.');
         }
 
@@ -84,7 +112,7 @@ class ServicoMaterialController extends Controller
         $servico->materiais()->sync($syncData);
 
         return redirect()
-            ->route('admin.servicos.show', $servico->id)
+            ->route("{$routeBase}.show", $servico->id)
             ->with('success', 'Materiais do serviço salvos com sucesso!');
     }
 }

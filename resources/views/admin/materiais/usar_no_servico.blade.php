@@ -4,6 +4,9 @@
 @section('page-title', 'Materiais - Serviço #'.$servico->id)
 
 @section('content')
+@php
+  $routeBase = $routeBase ?? 'admin.servicos';
+@endphp
 
 @if($errors->any())
   <div class="alert alert-danger">
@@ -20,7 +23,7 @@
     <h3 class="card-title">Lançar materiais usados</h3>
   </div>
 
-  <form method="POST" action="{{ route('admin.servicos.materiais.store', $servico) }}">
+  <form method="POST" action="{{ route($routeBase.'.materiais.store', $servico) }}">
     @csrf
 
     <div class="card-body">
@@ -76,7 +79,7 @@
     </div>
 
     <div class="card-footer text-right">
-      <a href="{{ route('admin.servicos.show', $servico) }}" class="btn btn-secondary">
+      <a href="{{ route($routeBase.'.show', $servico) }}" class="btn btn-secondary">
         Voltar
       </a>
       <button type="submit" class="btn btn-primary">

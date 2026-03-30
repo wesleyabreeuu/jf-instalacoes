@@ -144,7 +144,7 @@
 
     {{-- Sidebar --}}
     <aside class="main-sidebar elevation-4">
-        <a href="{{ route(auth()->user()->role === 'admin' ? 'admin.home' : 'app.home') }}" class="brand-link d-flex align-items-center">
+        <a href="{{ route(auth()->user()->isAdmin() ? 'admin.home' : 'app.home') }}" class="brand-link d-flex align-items-center">
     <img src="{{ asset('img/jf-logo.jpeg') }}"
          alt="JF"
          class="brand-image img-circle elevation-2"
@@ -167,9 +167,7 @@
             {{ auth()->user()->name }}
         </a>
 
-        @php
-            $isAdmin = auth()->user()->role === 'admin';
-        @endphp
+        @php $isAdmin = auth()->user()->isAdmin(); @endphp
 
         <span class="badge"
               style="
@@ -187,7 +185,7 @@
             <nav class="mt-2">
                 <ul class="nav nav-pills nav-sidebar flex-column" role="menu">
 
-    @if(auth()->user()->role === 'admin')
+    @if(auth()->user()->isAdmin())
         <li class="nav-header">ADMIN</li>
 
         {{-- 1 - Painel --}}
@@ -244,6 +242,16 @@
                 </a>
 
 
+        </li>
+    @else
+        <li class="nav-header">COLABORADOR</li>
+
+        <li class="nav-item">
+            <a href="{{ route('app.servicos.index') }}"
+               class="nav-link {{ request()->routeIs('app.home') || request()->routeIs('app.servicos.*') ? 'active' : '' }}">
+                <i class="nav-icon fas fa-tools"></i>
+                <p>Serviços</p>
+            </a>
         </li>
     @endif
 
