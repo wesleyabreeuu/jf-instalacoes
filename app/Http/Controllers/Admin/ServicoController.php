@@ -27,14 +27,6 @@ class ServicoController extends Controller
         if (!$user) {
             abort(401);
         }
-
-        if ($user->isAdmin()) {
-            return;
-        }
-
-        if ((int) $servico->colaborador_id !== (int) $user->id) {
-            abort(403, 'Acesso negado.');
-        }
     }
 
     public function index(Request $request)
@@ -50,10 +42,6 @@ class ServicoController extends Controller
         // filtro por colaborador
         if ($request->filled('colaborador_id') && $user?->isAdmin()) {
             $query->where('colaborador_id', $request->colaborador_id);
-        }
-
-        if (!$user?->isAdmin()) {
-            $query->where('colaborador_id', $user->id);
         }
 
         // filtro por data (de/até)

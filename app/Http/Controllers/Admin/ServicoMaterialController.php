@@ -21,14 +21,6 @@ class ServicoMaterialController extends Controller
         if (!$user) {
             abort(401);
         }
-
-        if ($user->isAdmin()) {
-            return;
-        }
-
-        if ((int) $servico->colaborador_id !== (int) $user->id) {
-            abort(403, 'Acesso negado.');
-        }
     }
 
     public function create(Servico $servico)
