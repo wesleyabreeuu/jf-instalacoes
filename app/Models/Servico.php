@@ -11,8 +11,11 @@ class Servico extends Model
     protected $fillable = [
         'cliente_id',
         'colaborador_id',
+        'usuario_id',
+        'titulo',
         'local_instalacao', 
         'data',
+        'data_servico',
         'hora_prevista',
         'status',
         'hora_deslocamento',     // DATETIME (hora de abertura)

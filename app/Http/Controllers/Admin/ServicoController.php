@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Material;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\File;
 
@@ -115,6 +116,19 @@ class ServicoController extends Controller
 
         if ($data['status'] === 'aberto') {
             $data['hora_deslocamento'] = now();
+        }
+
+        // Compatibilidade com bancos que ainda mantem colunas do schema antigo.
+        if (Schema::hasColumn('servicos', 'usuario_id')) {
+            $data['usuario_id'] = $data['colaborador_id'];
+        }
+
+        if (Schema::hasColumn('servicos', 'titulo')) {
+            $data['titulo'] = 'Servico agendado';
+        }
+
+        if (Schema::hasColumn('servicos', 'data_servico')) {
+            $data['data_servico'] = $data['data'];
         }
 
         Servico::create($data);
