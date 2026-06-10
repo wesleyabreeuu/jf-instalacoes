@@ -39,6 +39,16 @@ class RelatorioController extends Controller
         return $horas . 'h ' . str_pad((string) $resto, 2, '0', STR_PAD_LEFT) . 'min';
     }
 
+    private function tipoServicoLabel(string $tipoServico): string
+    {
+        return match ($tipoServico) {
+            'instalacao' => 'Instalação',
+            'manutencao' => 'Manutenção',
+            'orcamento' => 'Orçamento',
+            default => 'Todos',
+        };
+    }
+
     private function campoValorServico(): ?string
     {
         $possiveis = ['valor', 'valor_total', 'total', 'preco', 'orcamento', 'preco_total', 'valor_servico'];
@@ -135,6 +145,10 @@ class RelatorioController extends Controller
         $totalAgendado   = (clone $query)->where('status', 'agendado')->count();
         $totalAberto     = (clone $query)->where('status', 'aberto')->count();
         $totalPendente   = $totalAgendado + $totalAberto + $totalExecucao;
+        $totalAtrasado   = (clone $query)
+            ->where('status', 'agendado')
+            ->whereDate('data', '<', now()->toDateString())
+            ->count();
 
         $totalValor = $campoValor ? (clone $query)->sum($campoValor) : 0;
         $ticketMedio = $totalRegistros > 0 ? $totalValor / $totalRegistros : 0;
@@ -183,10 +197,14 @@ class RelatorioController extends Controller
 
         $tipoInstalacao = (clone $query)->where('tipo_servico', 'instalacao')->count();
         $tipoManutencao = (clone $query)->where('tipo_servico', 'manutencao')->count();
-        $tipoNaoInformado = max(0, $totalRegistros - $tipoInstalacao - $tipoManutencao);
+        $tipoOrcamento = (clone $query)->where('tipo_servico', 'orcamento')->count();
+        $tipoNaoInformado = max(0, $totalRegistros - $tipoInstalacao - $tipoManutencao - $tipoOrcamento);
+        $percentualInstalacao = $this->percentual($tipoInstalacao, $totalRegistros);
+        $percentualManutencao = $this->percentual($tipoManutencao, $totalRegistros);
+        $percentualOrcamento = $this->percentual($tipoOrcamento, $totalRegistros);
 
-        $tipoLabels = ['Instalação', 'Manutenção'];
-        $tipoDados = [$tipoInstalacao, $tipoManutencao];
+        $tipoLabels = ['Instalação', 'Manutenção', 'Orçamento'];
+        $tipoDados = [$tipoInstalacao, $tipoManutencao, $tipoOrcamento];
         if ($tipoNaoInformado > 0) {
             $tipoLabels[] = 'Não informado';
             $tipoDados[] = $tipoNaoInformado;
@@ -252,8 +270,18 @@ class RelatorioController extends Controller
                 $insights[] = 'Cancelamentos acima de 10% podem indicar problema de agenda, orçamento ou alinhamento com cliente.';
             }
 
-            if ($tipoInstalacao || $tipoManutencao) {
-                $tipoPrincipal = $tipoInstalacao >= $tipoManutencao ? 'instalações' : 'manutenções';
+            if ($totalAtrasado > 0) {
+                $insights[] = $totalAtrasado . ' serviço(s) agendado(s) já passaram da data prevista.';
+            }
+
+            if ($tipoInstalacao || $tipoManutencao || $tipoOrcamento) {
+                $tipos = [
+                    'instalações' => $tipoInstalacao,
+                    'manutenções' => $tipoManutencao,
+                    'orçamentos' => $tipoOrcamento,
+                ];
+                arsort($tipos);
+                $tipoPrincipal = array_key_first($tipos);
                 $insights[] = 'A maior demanda do período está em ' . $tipoPrincipal . '.';
             }
         }
@@ -281,6 +309,7 @@ class RelatorioController extends Controller
             'totalAgendado',
             'totalAberto',
             'totalPendente',
+            'totalAtrasado',
             'totalValor',
             'ticketMedio',
             'taxaConclusao',
@@ -294,6 +323,13 @@ class RelatorioController extends Controller
             'statusDados',
             'tipoLabels',
             'tipoDados',
+            'tipoInstalacao',
+            'tipoManutencao',
+            'tipoOrcamento',
+            'tipoNaoInformado',
+            'percentualInstalacao',
+            'percentualManutencao',
+            'percentualOrcamento',
             'topClientes',
             'topLocais',
             'topMateriais',
@@ -321,6 +357,7 @@ class RelatorioController extends Controller
         $totalExecucao   = $servicos->where('status', 'em_execucao')->count();
 
         $totalValor = $campoValor ? $servicos->sum($campoValor) : 0;
+        $tipoServicoLabel = $this->tipoServicoLabel($f['tipoServico']);
 
         $pdf = Pdf::loadView('admin.relatorios.pdf', array_merge($f, compact(
             'servicos',
@@ -328,7 +365,8 @@ class RelatorioController extends Controller
             'totalFinalizado',
             'totalCancelado',
             'totalExecucao',
-            'totalValor'
+            'totalValor',
+            'tipoServicoLabel'
         )))->setPaper('a4', 'landscape');
 
         return $pdf->download('relatorio-servicos.pdf');

@@ -16,6 +16,15 @@ use Illuminate\Support\Facades\File;
 
 class ServicoController extends Controller
 {
+    private function tipoServicoList(): array
+    {
+        return [
+            'instalacao' => 'Instalação',
+            'manutencao' => 'Manutenção',
+            'orcamento' => 'Orçamento',
+        ];
+    }
+
     private function routeBase(): string
     {
         return auth()->user()?->isAdmin() ? 'admin.servicos' : 'app.servicos';
@@ -34,6 +43,16 @@ class ServicoController extends Controller
     {
         $query = Servico::with(['cliente', 'colaborador'])->latest();
         $user = auth()->user();
+        $somenteOrcamentos = (bool) $request->attributes->get('somente_orcamentos', false);
+
+        if ($somenteOrcamentos) {
+            $query->where('tipo_servico', 'orcamento');
+        } elseif (!$request->filled('tipo_servico')) {
+            $query->where(function ($q) {
+                $q->whereNull('tipo_servico')
+                    ->orWhere('tipo_servico', '<>', 'orcamento');
+            });
+        }
 
         // filtro por status
         if ($request->filled('status')) {
@@ -70,14 +89,20 @@ class ServicoController extends Controller
             'cancelado' => 'Cancelado',
         ];
 
-        $tipoServicoList = [
-            'instalacao' => 'Instalação',
-            'manutencao' => 'Manutenção',
-        ];
+        $tipoServicoList = $this->tipoServicoList();
 
         $routeBase = $this->routeBase();
+        $pageTitle = $somenteOrcamentos ? 'Orçamentos' : 'Serviços';
 
-        return view('admin.servicos.index', compact('servicos', 'colaboradores', 'statusList', 'tipoServicoList', 'routeBase'));
+        return view('admin.servicos.index', compact('servicos', 'colaboradores', 'statusList', 'tipoServicoList', 'routeBase', 'pageTitle', 'somenteOrcamentos'));
+    }
+
+    public function orcamentos(Request $request)
+    {
+        $request->attributes->set('somente_orcamentos', true);
+        $request->merge(['tipo_servico' => 'orcamento']);
+
+        return $this->index($request);
     }
 
     public function create()
@@ -102,7 +127,7 @@ class ServicoController extends Controller
             'cliente_id' => ['required', 'exists:clientes,id'],
             'colaborador_id' => ['required', 'exists:users,id'],
             'local_instalacao' => ['nullable', 'string', 'max:255'],
-            'tipo_servico' => ['required', 'in:instalacao,manutencao'],
+            'tipo_servico' => ['required', 'in:instalacao,manutencao,orcamento'],
             'data' => ['required', 'date'],
             'hora_prevista' => ['nullable', 'date_format:H:i'],
             'status' => ['required', 'in:agendado,aberto,em_execucao,finalizado,cancelado'],
@@ -152,13 +177,120 @@ class ServicoController extends Controller
         $this->ensureCanAccess($servico);
         $servico->load(['cliente', 'colaborador', 'materiais']);
         $routeBase = $this->routeBase();
+        $usuarios = auth()->user()?->isAdmin()
+            ? User::orderBy('name')->get(['id', 'name'])
+            : collect();
 
-        return view('admin.servicos.show', compact('servico', 'routeBase'));
+        return view('admin.servicos.show', compact('servico', 'routeBase', 'usuarios'));
+    }
+
+    public function iniciarOrcamento(Servico $servico)
+    {
+        $this->ensureCanAccess($servico);
+
+        if ($servico->tipo_servico !== 'orcamento') {
+            return back()->with('error', 'Este registro não é um orçamento.');
+        }
+
+        if (!in_array($servico->status, ['agendado', 'aberto'], true)) {
+            return back()->with('success', 'Orçamento já iniciado ou finalizado.');
+        }
+
+        $servico->status = 'em_execucao';
+        $servico->hora_execucao = $servico->hora_execucao ?? now();
+        $servico->save();
+
+        return back()->with('success', 'Orçamento iniciado. Preencha os detalhes para finalizar.');
+    }
+
+    public function finalizarOrcamento(Request $request, Servico $servico)
+    {
+        $this->ensureCanAccess($servico);
+
+        if ($servico->tipo_servico !== 'orcamento') {
+            return back()->with('error', 'Este registro não é um orçamento.');
+        }
+
+        if ($servico->status !== 'em_execucao') {
+            return back()->with('error', 'O orçamento precisa estar iniciado para ser finalizado.');
+        }
+
+        $data = $request->validate([
+            'orcamento_descricao' => ['required', 'string', 'max:5000'],
+            'orcamento_descricao_servico' => ['required', 'string', 'max:5000'],
+            'orcamento_tempo_instalacao_min' => ['required', 'integer', 'min:1', 'max:10080'],
+            'orcamento_data_pre_agendada' => ['required', 'date'],
+        ]);
+
+        $agora = now();
+
+        $servico->fill($data);
+        $servico->status = 'finalizado';
+        $servico->hora_finalizado = $servico->hora_finalizado ?? $agora->format('H:i:s');
+        $servico->orcamento_finalizado_em = $servico->orcamento_finalizado_em ?? $agora;
+
+        if ($servico->hora_execucao) {
+            $servico->tempo_servico_min = $servico->hora_execucao->diffInMinutes($agora);
+        }
+
+        $servico->save();
+
+        return back()->with('success', 'Orçamento finalizado com sucesso.');
+    }
+
+    public function converterOrcamento(Request $request, Servico $servico)
+    {
+        $this->ensureCanAccess($servico);
+
+        if (!auth()->user()?->isAdmin()) {
+            abort(403);
+        }
+
+        if ($servico->tipo_servico !== 'orcamento' || $servico->status !== 'finalizado') {
+            return back()->with('error', 'Apenas orçamentos finalizados podem virar serviço.');
+        }
+
+        $data = $request->validate([
+            'tipo_servico' => ['required', 'in:instalacao,manutencao'],
+            'data' => ['required', 'date'],
+            'hora_prevista' => ['nullable', 'date_format:H:i'],
+            'colaborador_id' => ['required', 'exists:users,id'],
+        ]);
+
+        $servico->tipo_servico = $data['tipo_servico'];
+        $servico->data = $data['data'];
+        if (Schema::hasColumn('servicos', 'data_servico')) {
+            $servico->data_servico = $data['data'];
+        }
+        $servico->hora_prevista = $data['hora_prevista'] ?? null;
+        $servico->colaborador_id = $data['colaborador_id'];
+        if (Schema::hasColumn('servicos', 'usuario_id')) {
+            $servico->usuario_id = $data['colaborador_id'];
+        }
+        $servico->status = 'agendado';
+        $servico->hora_deslocamento = null;
+        $servico->hora_execucao = null;
+        $servico->hora_finalizado = null;
+        $servico->tempo_deslocamento_min = null;
+        $servico->tempo_servico_min = null;
+        if (Schema::hasColumn('servicos', 'estoque_baixado_em')) {
+            $servico->estoque_baixado_em = null;
+        }
+        $servico->orcamento_convertido_em = now();
+        $servico->save();
+
+        return redirect()
+            ->route('admin.servicos.show', $servico)
+            ->with('success', 'Orçamento convertido para ' . $servico->tipo_servico_label . '.');
     }
 
     public function updateStatus(Request $request, Servico $servico)
     {
         $this->ensureCanAccess($servico);
+
+        if ($servico->tipo_servico === 'orcamento') {
+            return back()->with('error', 'Use o fluxo próprio de orçamento para este registro.');
+        }
 
         $novoStatus = $request->validate([
             'status' => ['required', 'in:aberto,em_execucao,finalizado'],

@@ -92,5 +92,33 @@
         </tbody>
     </table>
 
+    @if($servico->tipo_servico === 'orcamento')
+        <div class="box">
+            <div class="label">Descrição do orçamento</div>
+            <div class="value">{{ $servico->orcamento_descricao ?? '-' }}</div>
+
+            <br>
+            <div class="label">Descrição do serviço previsto</div>
+            <div class="value">{{ $servico->orcamento_descricao_servico ?? '-' }}</div>
+
+            <table class="grid">
+                <thead>
+                    <tr>
+                        <th>Tempo estimado</th>
+                        <th>Data pré-agendada</th>
+                        <th>Finalizado em</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ $servico->orcamento_tempo_instalacao_texto }}</td>
+                        <td>{{ $servico->orcamento_data_pre_agendada?->format('d/m/Y') ?? '-' }}</td>
+                        <td>{{ $servico->orcamento_finalizado_em?->format('d/m/Y H:i') ?? '-' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    @endif
+
 </body>
 </html>

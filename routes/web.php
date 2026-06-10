@@ -43,10 +43,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->group(function () {
             Route::get('/', [ServicoController::class, 'index'])->name('home');
             Route::get('/servicos', [ServicoController::class, 'index'])->name('servicos.index');
+            Route::get('/orcamentos', [ServicoController::class, 'orcamentos'])->name('orcamentos.index');
             Route::get('/servicos/{servico}', [ServicoController::class, 'show'])->name('servicos.show');
             Route::get('/servicos/{servico}/pdf', [ServicoController::class, 'pdf'])->name('servicos.pdf');
             Route::patch('/servicos/{servico}/status', [ServicoController::class, 'updateStatus'])
                 ->name('servicos.status');
+            Route::patch('/servicos/{servico}/orcamento/iniciar', [ServicoController::class, 'iniciarOrcamento'])
+                ->name('servicos.orcamento.iniciar');
+            Route::patch('/servicos/{servico}/orcamento/finalizar', [ServicoController::class, 'finalizarOrcamento'])
+                ->name('servicos.orcamento.finalizar');
+            Route::patch('/servicos/{servico}/orcamento/converter', [ServicoController::class, 'converterOrcamento'])
+                ->name('servicos.orcamento.converter');
             Route::get('/servicos/{servico}/materiais', [ServicoMaterialController::class, 'create'])
                 ->name('servicos.materiais.create');
             Route::post('/servicos/{servico}/materiais', [ServicoMaterialController::class, 'store'])
@@ -81,6 +88,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('relatorios/pdf', [RelatorioController::class, 'pdf'])
                 ->name('relatorios.pdf');
 
+            Route::get('orcamentos', [ServicoController::class, 'orcamentos'])
+                ->name('orcamentos.index');
+
             /**
              * ✅ Serviços
              * - Tem SHOW (tela de exibição com botões de status)
@@ -95,6 +105,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // ✅ Rota para mudar status (AGENDADO->ABERTO->EM_EXECUCAO->FINALIZADO)
             Route::patch('servicos/{servico}/status', [ServicoController::class, 'updateStatus'])
                 ->name('servicos.status');
+
+            Route::patch('servicos/{servico}/orcamento/iniciar', [ServicoController::class, 'iniciarOrcamento'])
+                ->name('servicos.orcamento.iniciar');
+
+            Route::patch('servicos/{servico}/orcamento/finalizar', [ServicoController::class, 'finalizarOrcamento'])
+                ->name('servicos.orcamento.finalizar');
+
+            Route::patch('servicos/{servico}/orcamento/converter', [ServicoController::class, 'converterOrcamento'])
+                ->name('servicos.orcamento.converter');
 
             /**
              * ✅ Materiais do Serviço (lançamento de consumo)

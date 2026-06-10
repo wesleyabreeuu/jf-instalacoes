@@ -96,11 +96,15 @@
     }
     .chart-box {
         position: relative;
-        height: 270px;
+        height: 240px;
     }
     .chart-box-sm {
         position: relative;
-        height: 235px;
+        height: 180px;
+    }
+    .chart-box-xs {
+        position: relative;
+        height: 150px;
     }
     .insight-list {
         margin: 0;
@@ -127,6 +131,27 @@
         background: #f3f5f8;
         font-weight: 800;
         color: #071827;
+    }
+    .type-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .type-summary-item {
+        background: #f8fafc;
+        border: 1px solid #edf0f5;
+        border-radius: 8px;
+        padding: 10px;
+    }
+    .type-summary-item strong {
+        display: block;
+        font-size: 20px;
+        line-height: 1.1;
+    }
+    .type-summary-item span {
+        color: #667085;
+        font-size: 12px;
     }
     .table td,
     .table th {
@@ -188,6 +213,7 @@
                         <option value="todos" {{ $tipoServico==='todos'?'selected':'' }}>Todos</option>
                         <option value="instalacao" {{ $tipoServico==='instalacao'?'selected':'' }}>Instalação</option>
                         <option value="manutencao" {{ $tipoServico==='manutencao'?'selected':'' }}>Manutenção</option>
+                        <option value="orcamento" {{ $tipoServico==='orcamento'?'selected':'' }}>Orçamento</option>
                     </select>
                 </div>
 
@@ -269,7 +295,12 @@
                 <span class="metric-icon"><i class="fas fa-clipboard-list"></i></span>
                 <div class="label">Serviços no período</div>
                 <div class="value">{{ $totalRegistros }}</div>
-                <div class="note">{{ $clientesAtendidos }} cliente(s) atendido(s)</div>
+                <div class="note">
+                    {{ $clientesAtendidos }} cliente(s) atendido(s)
+                    @if($totalAtrasado > 0)
+                        · {{ $totalAtrasado }} atrasado(s)
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -301,8 +332,8 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-xl-8 mb-3">
+    <div class="row align-items-start">
+        <div class="col-xl-8">
             <div class="card report-card">
                 <div class="card-header">
                     <h3 class="card-title">Demanda por dia da semana</h3>
@@ -314,9 +345,75 @@
                     </div>
                 </div>
             </div>
+
+            <div class="row">
+                <div class="col-lg-6 mb-3">
+                    <div class="card report-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Clientes com mais serviços</h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 52px;">#</th>
+                                        <th>Cliente</th>
+                                        <th class="text-right">Serviços</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($topClientes as $index => $row)
+                                        <tr>
+                                            <td><span class="rank-number">{{ $index + 1 }}</span></td>
+                                            <td>{{ $row->cliente->nome ?? '-' }}</td>
+                                            <td class="text-right font-weight-bold">{{ $row->total }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted p-4">Sem clientes no período.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 mb-3">
+                    <div class="card report-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Locais com mais demanda</h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 52px;">#</th>
+                                        <th>Local</th>
+                                        <th class="text-right">Serviços</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($topLocais as $index => $row)
+                                        <tr>
+                                            <td><span class="rank-number">{{ $index + 1 }}</span></td>
+                                            <td>{{ $row->local_instalacao }}</td>
+                                            <td class="text-right font-weight-bold">{{ $row->total }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted p-4">Sem locais no período.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="col-xl-4 mb-3">
+        <div class="col-xl-4">
             <div class="card report-card">
                 <div class="card-header">
                     <h3 class="card-title">Leitura rápida</h3>
@@ -342,16 +439,26 @@
                     <h3 class="card-title">Serviços por tipo</h3>
                 </div>
                 <div class="card-body">
-                    <div class="chart-box-sm">
+                    <div class="type-summary">
+                        <div class="type-summary-item">
+                            <strong>{{ $tipoInstalacao }}</strong>
+                            <span>Instalações · {{ number_format($percentualInstalacao, 1, ',', '.') }}%</span>
+                        </div>
+                        <div class="type-summary-item">
+                            <strong>{{ $tipoManutencao }}</strong>
+                            <span>Manutenções · {{ number_format($percentualManutencao, 1, ',', '.') }}%</span>
+                        </div>
+                        <div class="type-summary-item">
+                            <strong>{{ $tipoOrcamento }}</strong>
+                            <span>Orçamentos · {{ number_format($percentualOrcamento, 1, ',', '.') }}%</span>
+                        </div>
+                    </div>
+                    <div class="chart-box-xs">
                         <canvas id="graficoTipos"></canvas>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="row">
-        <div class="col-lg-6 mb-3">
             <div class="card report-card">
                 <div class="card-header">
                     <h3 class="card-title">Status operacional</h3>
@@ -362,9 +469,7 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-6 mb-3">
             <div class="card report-card">
                 <div class="card-header">
                     <h3 class="card-title">Materiais mais usados</h3>
@@ -394,72 +499,6 @@
                             @empty
                                 <tr>
                                     <td colspan="3" class="text-center text-muted p-4">Nenhum material lançado no período.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-6 mb-3">
-            <div class="card report-card">
-                <div class="card-header">
-                    <h3 class="card-title">Clientes com mais serviços</h3>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th style="width: 52px;">#</th>
-                                <th>Cliente</th>
-                                <th class="text-right">Serviços</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($topClientes as $index => $row)
-                                <tr>
-                                    <td><span class="rank-number">{{ $index + 1 }}</span></td>
-                                    <td>{{ $row->cliente->nome ?? '-' }}</td>
-                                    <td class="text-right font-weight-bold">{{ $row->total }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted p-4">Sem clientes no período.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-6 mb-3">
-            <div class="card report-card">
-                <div class="card-header">
-                    <h3 class="card-title">Locais com mais demanda</h3>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th style="width: 52px;">#</th>
-                                <th>Local</th>
-                                <th class="text-right">Serviços</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($topLocais as $index => $row)
-                                <tr>
-                                    <td><span class="rank-number">{{ $index + 1 }}</span></td>
-                                    <td>{{ $row->local_instalacao }}</td>
-                                    <td class="text-right font-weight-bold">{{ $row->total }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted p-4">Sem locais no período.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -591,7 +630,7 @@
             labels: @json($tipoLabels),
             datasets: [{
                 data: @json($tipoDados),
-                backgroundColor: [chartColors.yellow, chartColors.blue, chartColors.gray],
+                backgroundColor: [chartColors.yellow, chartColors.blue, chartColors.orange, chartColors.gray],
                 borderWidth: 0
             }]
         },

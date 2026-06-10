@@ -22,7 +22,7 @@
         <br>
         Status: {{ $status === 'todos' ? 'Todos' : strtoupper(str_replace('_',' ',$status)) }}
         <br>
-        Tipo: {{ $tipoServico === 'todos' ? 'Todos' : ($tipoServico === 'instalacao' ? 'Instalação' : 'Manutenção') }}
+        Tipo: {{ $tipoServicoLabel ?? 'Todos' }}
     </div>
 
     <div class="cards">

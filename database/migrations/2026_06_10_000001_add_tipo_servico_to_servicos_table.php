@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::table('servicos', function (Blueprint $table) {
             if (!Schema::hasColumn('servicos', 'tipo_servico')) {
-                $table->enum('tipo_servico', ['instalacao', 'manutencao'])
+                $table->enum('tipo_servico', ['instalacao', 'manutencao', 'orcamento'])
                     ->nullable()
                     ->after('local_instalacao');
             }

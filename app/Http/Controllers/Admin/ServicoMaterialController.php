@@ -28,6 +28,12 @@ class ServicoMaterialController extends Controller
         $this->ensureCanAccess($servico);
         $routeBase = $this->routeBase();
 
+        if ($servico->tipo_servico === 'orcamento') {
+            return redirect()
+                ->route("{$routeBase}.show", $servico->id)
+                ->with('error', 'Orçamentos usam estimativa na descrição. Materiais reais só são lançados após converter para serviço.');
+        }
+
         // Só permite lançar materiais quando estiver em execução
         if ($servico->status !== 'em_execucao') {
             return redirect()
@@ -49,6 +55,12 @@ class ServicoMaterialController extends Controller
     {
         $this->ensureCanAccess($servico);
         $routeBase = $this->routeBase();
+
+        if ($servico->tipo_servico === 'orcamento') {
+            return redirect()
+                ->route("{$routeBase}.show", $servico->id)
+                ->with('error', 'Orçamentos usam estimativa na descrição. Materiais reais só são lançados após converter para serviço.');
+        }
 
         // Só permite salvar quando estiver em execução
         if ($servico->status !== 'em_execucao') {

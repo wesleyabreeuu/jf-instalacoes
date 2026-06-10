@@ -20,6 +20,7 @@
     $tipoServicoList = [
         'instalacao' => 'INSTALAÇÃO',
         'manutencao' => 'MANUTENÇÃO',
+        'orcamento' => 'ORÇAMENTO',
     ];
 @endphp
 
@@ -87,7 +88,7 @@
         <select name="tipo_servico" class="form-control" required>
             <option value="">Selecione</option>
             @foreach($tipoServicoList as $value => $label)
-                <option value="{{ $value }}" {{ old('tipo_servico') == $value ? 'selected' : '' }}>
+                <option value="{{ $value }}" {{ old('tipo_servico', request('tipo_servico')) == $value ? 'selected' : '' }}>
                     {{ $label }}
                 </option>
             @endforeach

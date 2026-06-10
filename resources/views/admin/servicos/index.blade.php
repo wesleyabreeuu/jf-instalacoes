@@ -1,7 +1,7 @@
 @extends('layouts.adminlte')
 
-@section('title', 'Serviços')
-@section('page-title', 'Serviços')
+@section('title', $pageTitle ?? 'Serviços')
+@section('page-title', $pageTitle ?? 'Serviços')
 
 @section('content')
 
@@ -11,6 +11,8 @@
 
 @php
     $routeBase = $routeBase ?? 'admin.servicos';
+    $pageTitle = $pageTitle ?? 'Serviços';
+    $somenteOrcamentos = $somenteOrcamentos ?? false;
     $isAdmin = auth()->user()?->isAdmin();
     $statusColors = [
         'agendado' => 'info',
@@ -23,13 +25,14 @@
     $tipoServicoList = $tipoServicoList ?? [
         'instalacao' => 'Instalação',
         'manutencao' => 'Manutenção',
+        'orcamento' => 'Orçamento',
     ];
 @endphp
 
 {{-- ✅ FILTROS --}}
 <div class="card">
     <div class="card-body">
-        <form method="GET" action="{{ route($routeBase.'.index') }}">
+        <form method="GET" action="{{ $somenteOrcamentos ? route(auth()->user()?->isAdmin() ? 'admin.orcamentos.index' : 'app.orcamentos.index') : route($routeBase.'.index') }}">
             <div class="row">
 
                 <div class="col-md-3">
@@ -44,17 +47,21 @@
                     </select>
                 </div>
 
-                <div class="col-md-3">
-                    <label>Tipo</label>
-                    <select name="tipo_servico" class="form-control">
-                        <option value="">Todos</option>
-                        @foreach($tipoServicoList as $key => $label)
-                            <option value="{{ $key }}" @selected(request('tipo_servico') === $key)>
-                                {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+                @if($somenteOrcamentos)
+                    <input type="hidden" name="tipo_servico" value="orcamento">
+                @else
+                    <div class="col-md-3">
+                        <label>Tipo</label>
+                        <select name="tipo_servico" class="form-control">
+                            <option value="">Todos</option>
+                            @foreach($tipoServicoList as $key => $label)
+                                <option value="{{ $key }}" @selected(request('tipo_servico') === $key)>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
 
                 @if($isAdmin)
                     <div class="col-md-3">
@@ -87,14 +94,14 @@
                     <i class="fas fa-filter"></i> Filtrar
                 </button>
 
-                <a href="{{ route($routeBase.'.index') }}" class="btn btn-outline-secondary">
+                <a href="{{ $somenteOrcamentos ? route(auth()->user()?->isAdmin() ? 'admin.orcamentos.index' : 'app.orcamentos.index') : route($routeBase.'.index') }}" class="btn btn-outline-secondary">
                     Limpar
                 </a>
 
                 {{-- ✅ Novo Serviço só para admin --}}
                 @if($isAdmin)
-                    <a href="{{ route($routeBase.'.create') }}" class="btn btn-primary ml-auto">
-                        <i class="fas fa-plus"></i> Novo Serviço
+                    <a href="{{ route($routeBase.'.create', $somenteOrcamentos ? ['tipo_servico' => 'orcamento'] : []) }}" class="btn btn-primary ml-auto">
+                        <i class="fas fa-plus"></i> {{ $somenteOrcamentos ? 'Novo Orçamento' : 'Novo Serviço' }}
                     </a>
                 @endif
             </div>
@@ -105,7 +112,7 @@
 {{-- ✅ TABELA --}}
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">Lista de Serviços</h3>
+        <h3 class="card-title">Lista de {{ $pageTitle }}</h3>
     </div>
 
     <div class="card-body table-responsive">

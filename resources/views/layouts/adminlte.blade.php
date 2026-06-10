@@ -227,13 +227,22 @@
         {{-- 5 - Serviços --}}
         <li class="nav-item">
             <a href="{{ route('admin.servicos.index') }}"
-               class="nav-link {{ request()->routeIs('admin.servicos.*') ? 'active' : '' }}">
+               class="nav-link {{ request()->routeIs('admin.servicos.*') && !request()->routeIs('admin.orcamentos.*') ? 'active' : '' }}">
                 <i class="nav-icon fas fa-tools"></i>
                 <p>Serviços</p>
             </a>
         </li>
 
-        {{-- 6 - Relatórios --}}
+        {{-- 6 - Orçamentos --}}
+        <li class="nav-item">
+            <a href="{{ route('admin.orcamentos.index') }}"
+               class="nav-link {{ request()->routeIs('admin.orcamentos.*') ? 'active' : '' }}">
+                <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                <p>Orçamentos</p>
+            </a>
+        </li>
+
+        {{-- 7 - Relatórios --}}
         <li class="nav-item">
             <a href="{{ route('admin.relatorios.index') }}"
                 class="nav-link {{ request()->routeIs('admin.relatorios.*') ? 'active' : '' }}">
@@ -251,6 +260,14 @@
                class="nav-link {{ request()->routeIs('app.home') || request()->routeIs('app.servicos.*') ? 'active' : '' }}">
                 <i class="nav-icon fas fa-tools"></i>
                 <p>Serviços</p>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{{ route('app.orcamentos.index') }}"
+               class="nav-link {{ request()->routeIs('app.orcamentos.*') ? 'active' : '' }}">
+                <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                <p>Orçamentos</p>
             </a>
         </li>
     @endif

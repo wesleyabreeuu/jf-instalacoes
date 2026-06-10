@@ -15,6 +15,12 @@ class Servico extends Model
         'titulo',
         'local_instalacao', 
         'tipo_servico',
+        'orcamento_descricao',
+        'orcamento_descricao_servico',
+        'orcamento_tempo_instalacao_min',
+        'orcamento_data_pre_agendada',
+        'orcamento_finalizado_em',
+        'orcamento_convertido_em',
         'data',
         'data_servico',
         'hora_prevista',
@@ -31,6 +37,9 @@ class Servico extends Model
         'hora_deslocamento' => 'datetime',
         'hora_execucao' => 'datetime',
         'hora_finalizado' => 'datetime',
+        'orcamento_data_pre_agendada' => 'date',
+        'orcamento_finalizado_em' => 'datetime',
+        'orcamento_convertido_em' => 'datetime',
     ];
 
     public function cliente()
@@ -55,8 +64,26 @@ class Servico extends Model
         return match ($this->tipo_servico) {
             'instalacao' => 'Instalação',
             'manutencao' => 'Manutenção',
+            'orcamento' => 'Orçamento',
             default => '-',
         };
+    }
+
+    public function getOrcamentoTempoInstalacaoTextoAttribute(): string
+    {
+        if (!$this->orcamento_tempo_instalacao_min) {
+            return '-';
+        }
+
+        $minutos = (int) $this->orcamento_tempo_instalacao_min;
+        $horas = intdiv($minutos, 60);
+        $resto = $minutos % 60;
+
+        if ($horas <= 0) {
+            return $resto . ' min';
+        }
+
+        return $horas . 'h ' . str_pad((string) $resto, 2, '0', STR_PAD_LEFT) . 'min';
     }
 
 }
