@@ -16,6 +16,11 @@
         'finalizado' => 'FINALIZADO',
         'cancelado' => 'CANCELADO',
     ];
+
+    $tipoServicoList = [
+        'instalacao' => 'INSTALAÇÃO',
+        'manutencao' => 'MANUTENÇÃO',
+    ];
 @endphp
 
 <div class="row">
@@ -62,7 +67,7 @@
 </div>
 
 <div class="row">
-    <div class="col-md-12 form-group">
+    <div class="col-md-8 form-group">
         <label>Local de instalação</label>
         <input
             type="text"
@@ -75,6 +80,18 @@
         <small class="text-muted">
             Se a instalação for em outro local, você pode alterar aqui.
         </small>
+    </div>
+
+    <div class="col-md-4 form-group">
+        <label>Tipo de serviço *</label>
+        <select name="tipo_servico" class="form-control" required>
+            <option value="">Selecione</option>
+            @foreach($tipoServicoList as $value => $label)
+                <option value="{{ $value }}" {{ old('tipo_servico') == $value ? 'selected' : '' }}>
+                    {{ $label }}
+                </option>
+            @endforeach
+        </select>
     </div>
 </div>
 

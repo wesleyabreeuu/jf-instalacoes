@@ -99,7 +99,7 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
                                         <div class="font-weight-bold">
-                                            {{ $s->titulo ?? ('Serviço #' . $s->id) }}
+                                            {{ $s->tipo_servico_label }} #{{ $s->id }}
                                         </div>
                                         <small class="text-muted">
                                             {{ $d->format('d/m/Y') }} {{ $s->hora_prevista }}

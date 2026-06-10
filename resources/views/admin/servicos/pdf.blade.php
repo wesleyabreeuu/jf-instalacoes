@@ -32,6 +32,7 @@
                 <p class="title">JF Instalações</p>
                 <p class="sub">Relatório do Serviço #{{ $servico->id }}</p>
                 <span class="badge">{{ strtoupper(str_replace('_',' ', $servico->status ?? '')) }}</span>
+                <span class="badge">{{ strtoupper($servico->tipo_servico_label) }}</span>
             </div>
             <div class="col-right">
                 @if($logoBase64)
@@ -75,6 +76,7 @@
     <table class="grid">
         <thead>
             <tr>
+                <th>Tipo</th>
                 <th>Data do serviço</th>
                 <th>Hora prevista</th>
                 <th>Colaborador</th>
@@ -82,6 +84,7 @@
         </thead>
         <tbody>
             <tr>
+                <td>{{ $servico->tipo_servico_label }}</td>
                 <td>{{ !empty($servico->data) ? \Carbon\Carbon::parse($servico->data)->format('d/m/Y') : '-' }}</td>
                 <td>{{ $servico->hora_prevista ?? '-' }}</td>
                 <td>{{ $servico->colaborador->name ?? $servico->user->name ?? '-' }}</td>

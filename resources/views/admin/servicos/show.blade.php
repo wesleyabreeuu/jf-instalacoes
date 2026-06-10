@@ -39,6 +39,7 @@
             {{-- ✅ NOVO: Local de instalação --}}
             <p class="mb-1"><b>Local de instalação:</b> {{ $servico->local_instalacao ?? '-' }}</p>
 
+            <p class="mb-1"><b>Tipo de serviço:</b> {{ $servico->tipo_servico_label }}</p>
             <p class="mb-1"><b>Colaborador:</b> {{ $servico->colaborador->name ?? '-' }}</p>
             <p class="mb-1"><b>Data:</b> {{ $servico->data?->format('d/m/Y') ?? '-' }}</p>
             <p class="mb-0"><b>Hora prevista:</b> {{ $servico->hora_prevista ?? '-' }}</p>

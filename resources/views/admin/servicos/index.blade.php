@@ -19,6 +19,11 @@
         'finalizado' => 'success',
         'cancelado' => 'danger',
     ];
+
+    $tipoServicoList = $tipoServicoList ?? [
+        'instalacao' => 'Instalação',
+        'manutencao' => 'Manutenção',
+    ];
 @endphp
 
 {{-- ✅ FILTROS --}}
@@ -33,6 +38,18 @@
                         <option value="">Todos</option>
                         @foreach($statusList as $key => $label)
                             <option value="{{ $key }}" @selected(request('status') === $key)>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label>Tipo</label>
+                    <select name="tipo_servico" class="form-control">
+                        <option value="">Todos</option>
+                        @foreach($tipoServicoList as $key => $label)
+                            <option value="{{ $key }}" @selected(request('tipo_servico') === $key)>
                                 {{ $label }}
                             </option>
                         @endforeach
@@ -98,6 +115,7 @@
                     <th>#</th>
                     <th>Cliente</th>
                     <th>Colaborador</th>
+                    <th>Tipo</th>
                     <th>Data</th>
                     <th>Hora Prevista</th>
                     <th>Status</th>
@@ -110,6 +128,7 @@
                         <td>{{ $servico->id }}</td>
                         <td>{{ $servico->cliente->nome ?? '-' }}</td>
                         <td>{{ $servico->colaborador->name ?? '-' }}</td>
+                        <td>{{ $servico->tipo_servico_label }}</td>
                         <td>{{ $servico->data?->format('d/m/Y') ?? '-' }}</td>
                         <td>{{ $servico->hora_prevista ?? '-' }}</td>
                         <td>
@@ -147,7 +166,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted">Nenhum serviço cadastrado.</td>
+                        <td colspan="8" class="text-center text-muted">Nenhum serviço cadastrado.</td>
                     </tr>
                 @endforelse
             </tbody>

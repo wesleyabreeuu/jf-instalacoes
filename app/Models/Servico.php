@@ -14,6 +14,7 @@ class Servico extends Model
         'usuario_id',
         'titulo',
         'local_instalacao', 
+        'tipo_servico',
         'data',
         'data_servico',
         'hora_prevista',
@@ -48,5 +49,14 @@ class Servico extends Model
                 ->withPivot(['quantidade_usada'])
                 ->withTimestamps();
         }
+
+    public function getTipoServicoLabelAttribute(): string
+    {
+        return match ($this->tipo_servico) {
+            'instalacao' => 'Instalação',
+            'manutencao' => 'Manutenção',
+            default => '-',
+        };
+    }
 
 }

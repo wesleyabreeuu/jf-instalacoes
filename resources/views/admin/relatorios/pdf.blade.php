@@ -21,6 +21,8 @@
         Período: {{ \Carbon\Carbon::parse($inicio)->format('d/m/Y') }} a {{ \Carbon\Carbon::parse($fim)->format('d/m/Y') }}
         <br>
         Status: {{ $status === 'todos' ? 'Todos' : strtoupper(str_replace('_',' ',$status)) }}
+        <br>
+        Tipo: {{ $tipoServico === 'todos' ? 'Todos' : ($tipoServico === 'instalacao' ? 'Instalação' : 'Manutenção') }}
     </div>
 
     <div class="cards">
@@ -36,6 +38,7 @@
             <tr>
                 <th>Data</th>
                 <th>Cliente</th>
+                <th>Tipo</th>
                 <th>Local</th>
                 <th>Status</th>
             </tr>
@@ -45,6 +48,7 @@
             <tr>
                 <td>{{ \Carbon\Carbon::parse($s->data)->format('d/m/Y') }}</td>
                 <td>{{ $s->cliente->nome ?? '-' }}</td>
+                <td>{{ $s->tipo_servico_label }}</td>
                 <td>{{ $s->local_instalacao ?? '-' }}</td>
                 <td>{{ strtoupper(str_replace('_',' ',$s->status)) }}</td>
             </tr>

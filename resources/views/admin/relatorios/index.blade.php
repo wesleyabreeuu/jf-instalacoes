@@ -53,6 +53,15 @@
             </div>
 
             <div class="col-md-2 mb-2">
+                <label>Tipo</label>
+                <select name="tipo_servico" class="form-control">
+                    <option value="todos" {{ $tipoServico==='todos'?'selected':'' }}>Todos</option>
+                    <option value="instalacao" {{ $tipoServico==='instalacao'?'selected':'' }}>Instalação</option>
+                    <option value="manutencao" {{ $tipoServico==='manutencao'?'selected':'' }}>Manutenção</option>
+                </select>
+            </div>
+
+            <div class="col-md-2 mb-2">
                 <label>Local</label>
                 <select name="local" class="form-control">
                     <option value="">Todos</option>
@@ -161,7 +170,7 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Instalações por dia da semana</h3>
+                <h3 class="card-title">Serviços por dia da semana</h3>
             </div>
             <div class="card-body">
                 <canvas id="graficoDias" height="95"></canvas>
@@ -182,6 +191,7 @@
                         <tr>
                             <th>Data</th>
                             <th>Cliente</th>
+                            <th>Tipo</th>
                             <th>Local</th>
                             <th>Materiais</th>
                             <th>Status</th>
@@ -193,6 +203,7 @@
                             <tr>
                                 <td>{{ \Carbon\Carbon::parse($s->data)->format('d/m/Y') }}</td>
                                 <td>{{ $s->cliente->nome ?? '-' }}</td>
+                                <td>{{ $s->tipo_servico_label }}</td>
                                 <td>{{ $s->local_instalacao ?? '-' }}</td>
                                 <td>
                                     @if($s->materiais->count())
@@ -213,7 +224,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted p-4">Nenhum registro encontrado.</td>
+                                <td colspan="7" class="text-center text-muted p-4">Nenhum registro encontrado.</td>
                             </tr>
                         @endforelse
                     </tbody>

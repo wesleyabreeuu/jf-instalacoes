@@ -40,6 +40,10 @@ class ServicoController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('tipo_servico')) {
+            $query->where('tipo_servico', $request->tipo_servico);
+        }
+
         // filtro por colaborador
         if ($request->filled('colaborador_id') && $user?->isAdmin()) {
             $query->where('colaborador_id', $request->colaborador_id);
@@ -66,9 +70,14 @@ class ServicoController extends Controller
             'cancelado' => 'Cancelado',
         ];
 
+        $tipoServicoList = [
+            'instalacao' => 'Instalação',
+            'manutencao' => 'Manutenção',
+        ];
+
         $routeBase = $this->routeBase();
 
-        return view('admin.servicos.index', compact('servicos', 'colaboradores', 'statusList', 'routeBase'));
+        return view('admin.servicos.index', compact('servicos', 'colaboradores', 'statusList', 'tipoServicoList', 'routeBase'));
     }
 
     public function create()
@@ -93,6 +102,7 @@ class ServicoController extends Controller
             'cliente_id' => ['required', 'exists:clientes,id'],
             'colaborador_id' => ['required', 'exists:users,id'],
             'local_instalacao' => ['nullable', 'string', 'max:255'],
+            'tipo_servico' => ['required', 'in:instalacao,manutencao'],
             'data' => ['required', 'date'],
             'hora_prevista' => ['nullable', 'date_format:H:i'],
             'status' => ['required', 'in:agendado,aberto,em_execucao,finalizado,cancelado'],

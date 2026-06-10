@@ -26,6 +26,7 @@ class RelatorioController extends Controller
     {
         $periodo = $request->get('periodo', 'mes'); // semana | mes | ano | personalizado
         $status  = $request->get('status', 'todos');
+        $tipoServico = $request->get('tipo_servico', 'todos');
 
         // Datas padrão
         $inicio = now()->startOfMonth()->toDateString();
@@ -50,6 +51,10 @@ class RelatorioController extends Controller
         // Status
         if ($status !== 'todos') {
             $query->where('status', $status);
+        }
+
+        if ($tipoServico !== 'todos') {
+            $query->where('tipo_servico', $tipoServico);
         }
 
         // Cliente
@@ -77,6 +82,7 @@ class RelatorioController extends Controller
             'query' => $query,
             'periodo' => $periodo,
             'status' => $status,
+            'tipoServico' => $tipoServico,
             'inicio' => $inicio,
             'fim' => $fim,
         ];
@@ -103,7 +109,7 @@ class RelatorioController extends Controller
 
         $totalValor = $campoValor ? (clone $query)->sum($campoValor) : 0;
 
-        // Gráfico: instalações por dia da semana (no período/filtros, exceto o filtro específico de dia)
+        // Gráfico: serviços por dia da semana (no período/filtros, exceto o filtro específico de dia)
         $queryDias = $this->aplicarFiltros(new Request(array_merge($request->query(), ['dia_semana' => null])))['query'];
 
         $dias = (clone $queryDias)
