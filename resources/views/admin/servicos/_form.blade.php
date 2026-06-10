@@ -12,6 +12,7 @@
     $statusList = [
         'agendado' => 'AGENDADO',
         'aberto' => 'ABERTO',
+        'em_deslocamento' => 'EM DESLOCAMENTO',
         'em_execucao' => 'EM EXECUÇÃO',
         'finalizado' => 'FINALIZADO',
         'cancelado' => 'CANCELADO',

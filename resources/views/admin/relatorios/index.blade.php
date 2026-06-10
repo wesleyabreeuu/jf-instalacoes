@@ -10,6 +10,7 @@
     $statusBadge = [
         'agendado' => 'info',
         'aberto' => 'secondary',
+        'em_deslocamento' => 'primary',
         'em_execucao' => 'warning',
         'finalizado' => 'success',
         'cancelado' => 'danger',
@@ -201,6 +202,7 @@
                         <option value="todos" {{ $status==='todos'?'selected':'' }}>Todos</option>
                         <option value="agendado" {{ $status==='agendado'?'selected':'' }}>Agendado</option>
                         <option value="aberto" {{ $status==='aberto'?'selected':'' }}>Aberto</option>
+                        <option value="em_deslocamento" {{ $status==='em_deslocamento'?'selected':'' }}>Em deslocamento</option>
                         <option value="em_execucao" {{ $status==='em_execucao'?'selected':'' }}>Em execução</option>
                         <option value="finalizado" {{ $status==='finalizado'?'selected':'' }}>Finalizado</option>
                         <option value="cancelado" {{ $status==='cancelado'?'selected':'' }}>Cancelado</option>
@@ -655,6 +657,7 @@
                     chartColors.cyan,
                     chartColors.gray,
                     chartColors.orange,
+                    chartColors.yellow,
                     chartColors.green,
                     chartColors.red
                 ],

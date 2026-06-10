@@ -28,6 +28,9 @@
     <div class="cards">
         <span class="card">Total: <b>{{ $totalRegistros }}</b></span>
         <span class="card">Finalizados: <b>{{ $totalFinalizado }}</b></span>
+        @isset($totalDeslocamento)
+            <span class="card">Em deslocamento: <b>{{ $totalDeslocamento }}</b></span>
+        @endisset
         <span class="card">Em execução: <b>{{ $totalExecucao }}</b></span>
         <span class="card">Cancelados: <b>{{ $totalCancelado }}</b></span>
         <span class="card">Valor: <b>R$ {{ number_format($totalValor ?? 0, 2, ',', '.') }}</b></span>

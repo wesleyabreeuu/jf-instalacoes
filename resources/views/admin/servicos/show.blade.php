@@ -20,6 +20,7 @@
     $statusColors = [
         'agendado' => 'info',
         'aberto' => 'secondary',
+        'em_deslocamento' => 'primary',
         'em_execucao' => 'warning',
         'finalizado' => 'success',
         'cancelado' => 'danger',
@@ -103,7 +104,7 @@
 
             <div class="row">
                 <div class="col-md-4">
-                    <div class="small text-muted">Hora de abertura/deslocamento</div>
+                    <div class="small text-muted">Início do deslocamento</div>
                     <div class="font-weight-bold">
                         {{ $servico->hora_deslocamento?->format('d/m/Y H:i') ?? '-' }}
                     </div>
@@ -209,6 +210,17 @@
             @endif
 
             @if(!$isOrcamento && $servico->status === 'aberto')
+                <form method="POST" action="{{ route($routeBase.'.status', $servico) }}">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="status" value="em_deslocamento">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-route"></i> Iniciar deslocamento
+                    </button>
+                </form>
+            @endif
+
+            @if(!$isOrcamento && $servico->status === 'em_deslocamento')
                 <form method="POST" action="{{ route($routeBase.'.status', $servico) }}">
                     @csrf
                     @method('PATCH')

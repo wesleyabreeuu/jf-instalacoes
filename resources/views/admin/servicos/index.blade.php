@@ -17,6 +17,7 @@
     $statusColors = [
         'agendado' => 'info',
         'aberto' => 'secondary',
+        'em_deslocamento' => 'primary',
         'em_execucao' => 'warning',
         'finalizado' => 'success',
         'cancelado' => 'danger',

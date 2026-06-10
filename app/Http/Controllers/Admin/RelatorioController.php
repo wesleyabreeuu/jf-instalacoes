@@ -142,9 +142,10 @@ class RelatorioController extends Controller
         $totalFinalizado = (clone $query)->where('status', 'finalizado')->count();
         $totalCancelado  = (clone $query)->where('status', 'cancelado')->count();
         $totalExecucao   = (clone $query)->where('status', 'em_execucao')->count();
+        $totalDeslocamento = (clone $query)->where('status', 'em_deslocamento')->count();
         $totalAgendado   = (clone $query)->where('status', 'agendado')->count();
         $totalAberto     = (clone $query)->where('status', 'aberto')->count();
-        $totalPendente   = $totalAgendado + $totalAberto + $totalExecucao;
+        $totalPendente   = $totalAgendado + $totalAberto + $totalDeslocamento + $totalExecucao;
         $totalAtrasado   = (clone $query)
             ->where('status', 'agendado')
             ->whereDate('data', '<', now()->toDateString())
@@ -186,10 +187,11 @@ class RelatorioController extends Controller
             $dadosDias[] = (int) ($dias[$dow] ?? 0);
         }
 
-        $statusLabels = ['Agendado', 'Aberto', 'Em execução', 'Finalizado', 'Cancelado'];
+        $statusLabels = ['Agendado', 'Aberto', 'Em deslocamento', 'Em execução', 'Finalizado', 'Cancelado'];
         $statusDados = [
             $totalAgendado,
             $totalAberto,
+            $totalDeslocamento,
             $totalExecucao,
             $totalFinalizado,
             $totalCancelado,
@@ -306,6 +308,7 @@ class RelatorioController extends Controller
             'totalFinalizado',
             'totalCancelado',
             'totalExecucao',
+            'totalDeslocamento',
             'totalAgendado',
             'totalAberto',
             'totalPendente',
@@ -355,6 +358,7 @@ class RelatorioController extends Controller
         $totalFinalizado = $servicos->where('status', 'finalizado')->count();
         $totalCancelado  = $servicos->where('status', 'cancelado')->count();
         $totalExecucao   = $servicos->where('status', 'em_execucao')->count();
+        $totalDeslocamento = $servicos->where('status', 'em_deslocamento')->count();
 
         $totalValor = $campoValor ? $servicos->sum($campoValor) : 0;
         $tipoServicoLabel = $this->tipoServicoLabel($f['tipoServico']);
@@ -365,6 +369,7 @@ class RelatorioController extends Controller
             'totalFinalizado',
             'totalCancelado',
             'totalExecucao',
+            'totalDeslocamento',
             'totalValor',
             'tipoServicoLabel'
         )))->setPaper('a4', 'landscape');

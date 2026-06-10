@@ -84,6 +84,7 @@ class ServicoController extends Controller
         $statusList = [
             'agendado' => 'Agendado',
             'aberto' => 'Aberto',
+            'em_deslocamento' => 'Em deslocamento',
             'em_execucao' => 'Em execução',
             'finalizado' => 'Finalizado',
             'cancelado' => 'Cancelado',
@@ -130,7 +131,7 @@ class ServicoController extends Controller
             'tipo_servico' => ['required', 'in:instalacao,manutencao,orcamento'],
             'data' => ['required', 'date'],
             'hora_prevista' => ['nullable', 'date_format:H:i'],
-            'status' => ['required', 'in:agendado,aberto,em_execucao,finalizado,cancelado'],
+            'status' => ['required', 'in:agendado,aberto,em_deslocamento,em_execucao,finalizado,cancelado'],
         ]);
 
         // Se não veio local_instalacao, preenche com endereço do cliente
@@ -149,7 +150,7 @@ class ServicoController extends Controller
             $data['local_instalacao'] = $endereco !== ',  - , /' ? $endereco : null;
         }
 
-        if ($data['status'] === 'aberto') {
+        if ($data['status'] === 'em_deslocamento') {
             $data['hora_deslocamento'] = now();
         }
 
@@ -293,14 +294,15 @@ class ServicoController extends Controller
         }
 
         $novoStatus = $request->validate([
-            'status' => ['required', 'in:aberto,em_execucao,finalizado'],
+            'status' => ['required', 'in:aberto,em_deslocamento,em_execucao,finalizado'],
         ])['status'];
 
         $statusAtual = $servico->status;
 
         $permitido = match ($statusAtual) {
             'agendado' => $novoStatus === 'aberto',
-            'aberto' => $novoStatus === 'em_execucao',
+            'aberto' => $novoStatus === 'em_deslocamento',
+            'em_deslocamento' => $novoStatus === 'em_execucao',
             'em_execucao' => $novoStatus === 'finalizado',
             default => false,
         };
@@ -314,13 +316,22 @@ class ServicoController extends Controller
         // AGENDADO -> ABERTO
         if ($novoStatus === 'aberto') {
             $servico->status = 'aberto';
-            $servico->hora_deslocamento = $servico->hora_deslocamento ?? $agora;
             $servico->save();
 
             return back()->with('success', 'Serviço aberto!');
         }
 
-        // ABERTO -> EM_EXECUCAO
+        // ABERTO -> EM_DESLOCAMENTO
+        if ($novoStatus === 'em_deslocamento') {
+            $servico->status = 'em_deslocamento';
+            $servico->hora_deslocamento = $agora;
+            $servico->tempo_deslocamento_min = null;
+            $servico->save();
+
+            return back()->with('success', 'Deslocamento iniciado!');
+        }
+
+        // EM_DESLOCAMENTO -> EM_EXECUCAO
         if ($novoStatus === 'em_execucao') {
             $servico->status = 'em_execucao';
             $servico->hora_execucao = $servico->hora_execucao ?? $agora;
